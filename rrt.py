@@ -22,12 +22,20 @@ parent=1; currnode=2
 
 iter = 2 
 def getdistance() :
+    # return the min distance and the index for it. 
+    # return distance  , mi 
     pass
 
 def goalreached() :
+    #check if the goal is reached return true
+    
     pass 
 
 while iter  < N :
     x_rand = np.random.uniform(0,x_max)
     y_rand = np.random.uniform(0,y_max)
+    distance , mi = getdistance()
+
+    if distance >= step_size:
+        x_new = 
     
