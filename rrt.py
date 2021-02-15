@@ -13,8 +13,9 @@ class rrttree:
 N = 5000
 step_size = 10
 threshold = 40
-x_max = 600; y_max = 600
+x_max = 600; y_max = 600;bias = 0.2
 
+x_goal = 400; y_goal = 500
 rrt = rrttree(5 , 5 , 1, 0 ) 
 rrtT = {}
 rrtT[rrt.nodeno]=rrt
@@ -28,14 +29,32 @@ def getdistance() :
 
 def goalreached() :
     #check if the goal is reached return true
-    
+
     pass 
 
 while iter  < N :
-    x_rand = np.random.uniform(0,x_max)
-    y_rand = np.random.uniform(0,y_max)
-    distance , mi = getdistance()
+    if np.random.uniform(0,1 , 1)[0] < bias:
+        x_rand = x_goal
+        y_rand = y_goal
+    else:
+        x_rand = np.round ( np.random.uniform(0,x_max))
+        y_rand = np.round ( np.random.uniform(0,y_max))
+
+    distance , parentind = getdistance()
 
     if distance >= step_size:
-        x_new = 
+        x_new = rrtT[parentind].x + ((x_rand - rrtT[parentind].x)*step_size)/distance
+        y_new = rrtT[parentind].y + ((y_rand - rrtT[parentind].y)*step_size)/distance
+    else:
+        x_new = x_rand
+        y_new = y_rand 
     
+    rrt = rrttree(x_new ,y_new  , iter, parentind )
+    rrtT[rrt.nodeno]=rrt
+
+    if goalreached():
+        rrtT[rrttree(x_new ,y_new  , iter +1 , iter )]
+        break 
+    iter += 1
+
+
