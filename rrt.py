@@ -15,10 +15,10 @@ step_size = 10
 threshold = 40
 x_max = 600; y_max = 600
 
-rrt = rrttree(5 , 5 , 1, 0 ) 
+rrt = rrttree(5 , 5 , 1, 0) 
 rrtT = {}
 rrtT[rrt.nodeno]=rrt
-parent=1; currnode=2
+# parent=1; currnode=2
 
 iter = 2 
 def getdistance() :
@@ -26,10 +26,17 @@ def getdistance() :
     # return distance  , mi 
     pass
 
-def goalreached() :
-    #check if the goal is reached return true
-    
-    pass 
+def goalreached(rrtnode) :
+    #check if the goal is reached from the generated node, then return true
+    distance = np.sqrt((rrtnode.x-x_goal)**2 + (rrtnode.y-y_goal)**2)
+    if distance <=threshold:
+    	rrtgoal=rrttree(x_goal, y_goal, iter+1, iter)
+    	rrtT[iter+1]=rrtgoal
+    	return True
+    else:
+    	iter+=1
+    	return False
+
 
 while iter  < N :
     x_rand = np.random.uniform(0,x_max)
