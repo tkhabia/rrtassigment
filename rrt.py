@@ -1,8 +1,9 @@
 import numpy as np
 import random
+import cv2 
 
-floorplan = np.zeros((500, 500))
 
+floorplan = np.full((600, 600 , 3) , 255)
 
 class rrttree:
     def __init__(self, x, y, nodeno, parent):
@@ -14,7 +15,7 @@ class rrttree:
 
 N = 5000
 step_size = 10
-threshold = 40
+threshold = 25
 x_max = 600
 y_max = 600
 bias = 0.2
@@ -22,17 +23,18 @@ bias = 0.2
 x_goal = 400
 y_goal = 500
 rrt = rrttree(5, 5, 1, 0)
+floorplan =cv2.circle(floorplan , (5, 5) , 4 , (0,255 , 0),-1)
+floorplan =cv2.circle(floorplan , (x_goal, y_goal) , 25 , (0,0 , 255),-1)
 
 rrtT = {}
 rrtT[rrt.nodeno] = rrt
-# parent=1; currnode=2
 
 iter = 2
 
 
 def getdistance():
     # return the min distance and the index for it.
-    # return distance  , mi
+    # return distance  , parentind 
     pass
 
 
@@ -44,7 +46,6 @@ def goalreached(rrtnode):
         rrtT[iter+1] = rrtgoal
         return True
     else:
-        iter += 1
         return False
 
 
@@ -66,11 +67,10 @@ while iter < N:
     else:
         x_new = x_rand
         y_new = y_rand
-
+    
     rrt = rrttree(x_new, y_new, iter, parentind)
     rrtT[rrt.nodeno] = rrt
 
-    if goalreached():
-        rrtT[rrttree(x_new, y_new, iter + 1, iter)]
+    if goalreached(rrt ):
         break
     iter += 1
