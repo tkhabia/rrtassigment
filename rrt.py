@@ -3,9 +3,11 @@ import numpy as np
 import math
 import cv2
 import matplotlib.pyplot as plt
+from numpy.lib.polynomial import RankWarning
 from makepath import makefloor
+from combine import frames_to_video
 
-floorplan = makefloor((600 , 600) , 10 )
+floorplan = makefloor((600 , 600) , 20 )
 
 
 class rrttree:
@@ -16,18 +18,18 @@ class rrttree:
         self.parent = parent
 
 
-N = 500
-step_size = 10
-threshold = 25
+N = 600
+step_size = 18
+threshold = 20
 x_max = 600
 y_max = 600
-bias = 0.2
+bias = 0.05
 
 x_goal = 400
 y_goal = 500
-rrt = rrttree(5, 5, 1, 0)
-floorplan = cv2.circle(floorplan, (5, 5), 4, (0, 255, 0), -1)
-floorplan = cv2.circle(floorplan, (x_goal, y_goal), 25, (0, 0, 255), -1)
+rrt = rrttree(50, 50, 1, 0)
+floorplan = cv2.circle(floorplan, (50, 50), 8, (0, 255, 0), -1)
+floorplan = cv2.circle(floorplan, (x_goal, y_goal), 20, (0, 0, 255), -1)
 
 rrtT = {}
 rrtT[rrt.nodeno] = rrt
@@ -61,32 +63,44 @@ def goalreached(rrtnode):
         return False
 
 
-def drawline(rrt, parentind):
-    cv2.line(floorplan, (rrt.x, rrt.y),
-             (rrtT[parentind].x, rrtT[parentind].y), (255, 0, 255), 1)
-    cv2.circle(floorplan , (rrt.x, rrt.y) , 3 , (255 , 0 , 0 ) ,-1)
+def drawline(rrt, parentind , f=0):
+    if f == 0 :
+        cv2.line(floorplan, (rrt.x, rrt.y),
+                (rrtT[parentind].x, rrtT[parentind].y), (125, 125, 0), 1)
+        cv2.circle(floorplan , (rrt.x, rrt.y) , 3 , (125, 125 , 0 ) ,-1)
+    else:
+        cv2.line(floorplan, (rrt.x, rrt.y),
+                (rrtT[parentind].x, rrtT[parentind].y), (1, 0, 255), 1)
+        cv2.circle(floorplan , (rrt.x, rrt.y) , 3 , (0, 0 , 255 ) ,-1)
 
 
 def checkobstical(x_new, y_new, floorplan, parentind):
     x_old = rrtT[parentind].x
     y_old = rrtT[parentind].y
-    inc = 1 if x_old - x_new > 0 else -1
-    for i in range(x_new, x_old, inc):
-        yl = (y_old - y_new) * (i - x_new) / (x_old - x_new) + y_new
-        print(floorplan[i, int( math.ceil( yl))])
+    if x_old  > x_new :
+        for i in range(x_new , x_old+1 ):
+            y  = np.int(np.round( (y_old - y_new ) * (i - x_new)/(x_old - x_new ) + y_new ))
+            if np.mean(floorplan[y , i]) == 0 :
+                return True
+    elif x_old  < x_new:
+        for i in range(x_old , x_new+1 ):
+            y  = np.int(np.round( (y_old - y_new ) * (i - x_new)/(x_old - x_new ) + y_new ))
+            if np.mean(floorplan[y , i]) == 0 :
+                return True
+    else :
+        # print("fine")
+        return True 
 
-        if np.mean (floorplan[ int( math.ceil( yl)), i][0]) == 0   or np.mean(floorplan[int( math.floor( yl)) , i ][0]) == 0  :
-            return True
     return False
 
 
 while iter < N:
-    # if np.random.uniform(0, 1, 1)[0] < bias:
-    #     x_rand = x_goal
-    #     y_rand = y_goal
-    # else:
-    x_rand = np.round(np.random.uniform(0, x_max))
-    y_rand = np.round(np.random.uniform(0, y_max))
+    if np.random.uniform(0, 1, 1)[0] < bias:
+        x_rand = x_goal
+        y_rand = y_goal
+    else:
+        x_rand = np.round(np.random.uniform(0, x_max))
+        y_rand = np.round(np.random.uniform(0, y_max))
 
     distance, parentind = getdistance(rrtT , x_rand , y_rand )
 
@@ -106,11 +120,17 @@ while iter < N:
         continue
 
     rrt = rrttree(x_new, y_new, iter, parentind)
+
     rrtT[rrt.nodeno] = rrt
     drawline(rrt, parentind)
     if goalreached(rrt):
         break
     iter += 1
+    cv2.imwrite('./holonomic/'  + str(iter) + '.png')
 
+while(rrtT[iter].parent != 0 ):
+    drawline(rrtT[iter] , rrtT[iter].parent , 1)
+    iter = rrtT[iter].parent
+frames_to_video('./holonomic/*.png' , './holonomic/holonomic.mp4' , 25)
 plt.imshow(floorplan)
 plt.show()

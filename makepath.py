@@ -20,11 +20,10 @@ def makefloor(size , robosize):
     kernel = np.uint8(cv2.circle(kernel ,(v//2,v//2) , 2 , (1, 0 , 0 ),thickness=-1 )[:,:,0])
     
     erosion = cv2.erode(floor,kernel,iterations = 1)
-    # plt.imshow(erosion , cmap="gray")
-    # plt.show()
+
     erosion = cv2.cvtColor(erosion , cv2.COLOR_GRAY2RGB)
     print(erosion.shape )
-    return erosion
+    return erosion 
 
 if __name__ == "__main__":
     makefloor((600,600) , 10)
