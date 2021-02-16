@@ -1,15 +1,13 @@
 # For holonomic robot and non-obstacle path
 import numpy as np
-import math
 import cv2
 import matplotlib.pyplot as plt
 from numpy.lib.polynomial import RankWarning
 from makepath import makefloor
 from combine import frames_to_video
-
-floorplan = makefloor((600 , 600) , 20 )
-
-
+import os 
+os.system("rm holonomic/*.png")
+floorplan = makefloor((600 , 600) , 30)
 class rrttree:
     def __init__(self, x, y, nodeno, parent):
         self.x = x
@@ -36,7 +34,6 @@ rrtT[rrt.nodeno] = rrt
 
 iter = 2
 
-
 def getdistance(rrtT , x_rand  , y_rand ):
     # return the min distance and the index for it.
     # return distance  , parentind
@@ -58,6 +55,7 @@ def goalreached(rrtnode):
     if distance <= threshold:
         rrtgoal = rrttree(x_goal, y_goal, iter+1, iter)
         rrtT[iter+1] = rrtgoal
+        
         return True
     else:
         return False
@@ -88,7 +86,7 @@ def checkobstical(x_new, y_new, floorplan, parentind):
             if np.mean(floorplan[y , i]) == 0 :
                 return True
     else :
-        # print("fine")
+        # print("fine" , parentind)
         return True 
 
     return False
@@ -112,7 +110,6 @@ while iter < N:
     else:
         x_new = x_rand
         y_new = y_rand
-
     x_new = np.int(np.round(x_new))
     y_new = np.int(np.round(y_new))
 
@@ -123,14 +120,18 @@ while iter < N:
 
     rrtT[rrt.nodeno] = rrt
     drawline(rrt, parentind)
+
     if goalreached(rrt):
         break
     iter += 1
-    cv2.imwrite('./holonomic/'  + str(iter) + '.png')
+    cv2.imwrite('./holonomic/'  + str(iter) + '.png' , floorplan)
 
 while(rrtT[iter].parent != 0 ):
     drawline(rrtT[iter] , rrtT[iter].parent , 1)
     iter = rrtT[iter].parent
+
+
+cv2.imwrite('./holonomic/'  + str(N+3) + '.png' , floorplan)
 frames_to_video('./holonomic/*.png' , './holonomic/holonomic.mp4' , 25)
-plt.imshow(floorplan)
-plt.show()
+# plt.imshow(floorplan)
+# plt.show()

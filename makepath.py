@@ -9,6 +9,8 @@ def makefloor(size , robosize):
     # floor = cv2.copyMakeBorder(floor, 2,2,2,2,borderType=cv2.BORDER_CONSTANT)
     floor[100 : 125 , 0:  500] = 0
     floor[300 : 325 , -450 : ] = 0
+    floor = np.uint8(cv2.circle(floor ,(308 , 205) , 30, (0, 0 , 0 ),thickness=-1 ))
+    floor = np.uint8(cv2.circle(floor ,(186 , 393) , 30, (0, 0 , 0 ),thickness=-1 ))
     # floor[]
     
     if (robosize//2)&1:
@@ -22,7 +24,12 @@ def makefloor(size , robosize):
     erosion = cv2.erode(floor,kernel,iterations = 1)
 
     erosion = cv2.cvtColor(erosion , cv2.COLOR_GRAY2RGB)
-    print(erosion.shape )
+    # print(erosion.shape )
+    # plt.imshow(erosion)
+    
+    # plt.figure()
+    # plt.imshow(floor)
+    # plt.show()
     return erosion 
 
 if __name__ == "__main__":

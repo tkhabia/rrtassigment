@@ -1,6 +1,12 @@
 # python3 combine.py
 import cv2
 from glob import glob
+import re
+numbers = re.compile(r'(\d+)')
+def numericalSort(value):
+    parts = numbers.split(value)
+    parts[1::2] = map(int, parts[1::2])
+    return parts
 
 # parser = argparse.ArgumentParser(description='Converting Frames to Video and Vice Versa')
 # parser.add_argument('--in', dest='input', required=True, help = "[--in \path\to\input\directory]")
@@ -24,16 +30,17 @@ def frames_to_video(input_path, output_path, fps):
     # if not os.path.isdir(output_path):
     #     os.makedirs(output_path)
 
-    image_files = sorted(glob(input_path))
-    print(image_files)
+    image_files = sorted(glob(input_path) , key=numericalSort)
+    # print(image_files)
 
     frames = []
-
+    size = (600 , 600)
     for i in range(len(image_files)):
         # f = f"{input_path}/{i}.png"
-        f = f"results/{i}.png" 
-        frame = cv2.imread(f)
-        height, width, channels = frame.shape
+        # f = f"results/{i}.png" 
+        frame = cv2.imread(image_files[i])
+
+        height, width, _ = frame.shape
         size = (width, height)
         frames.append(frame)
 
