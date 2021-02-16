@@ -1,9 +1,11 @@
+# For holonomic robot and non-obstacle path
 import numpy as np
 import math
 import cv2
 import matplotlib.pyplot as plt
+from makepath import makefloor
 
-floorplan = np.uint8( np.full((600, 600, 3), 255))
+floorplan = makefloor((600 , 600) , 10 )
 
 
 class rrttree:
@@ -42,7 +44,7 @@ def getdistance(rrtT , x_rand  , y_rand ):
         # tempnode=i
         xt,yt= rrtT[i+1].x, rrtT[i+1].y
         temp_dist=np.sqrt((x_rand-xt)**2 + (y_rand-yt)**2)
-        if temp_dist<min_dist:
+        if temp_dist<=min_dist:
             min_dist=temp_dist
             index=rrtT[i+1].nodeno
     return min_dist, index
@@ -61,7 +63,7 @@ def goalreached(rrtnode):
 
 def drawline(rrt, parentind):
     cv2.line(floorplan, (rrt.x, rrt.y),
-             (rrtT[parentind].x, rrtT[parentind].x), (255, 0, 0), 1)
+             (rrtT[parentind].x, rrtT[parentind].y), (255, 0, 255), 1)
     cv2.circle(floorplan , (rrt.x, rrt.y) , 3 , (255 , 0 , 0 ) ,-1)
 
 
@@ -70,9 +72,10 @@ def checkobstical(x_new, y_new, floorplan, parentind):
     y_old = rrtT[parentind].y
     inc = 1 if x_old - x_new > 0 else -1
     for i in range(x_new, x_old, inc):
-        yl = (y_old - y_new) * (i - x_new) / (x_old - x_new)
-        # print(floorplan[i, int( math.ceil( yl))])
-        if floorplan[i, int( math.ceil( yl))][0] == 0 or floorplan[i, int( math.floor( yl))][0] == 0:
+        yl = (y_old - y_new) * (i - x_new) / (x_old - x_new) + y_new
+        print(floorplan[i, int( math.ceil( yl))])
+
+        if np.mean (floorplan[ int( math.ceil( yl)), i][0]) == 0   or np.mean(floorplan[int( math.floor( yl)) , i ][0]) == 0  :
             return True
     return False
 
