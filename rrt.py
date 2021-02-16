@@ -7,7 +7,8 @@ from makepath import makefloor
 from combine import frames_to_video
 import os 
 os.system("rm holonomic/*.png")
-floorplan = makefloor((600 , 600) , 30)
+floorplan , erosion = makefloor((600 , 600) , 30)
+
 class rrttree:
     def __init__(self, x, y, nodeno, parent):
         self.x = x
@@ -27,7 +28,7 @@ x_goal = 400
 y_goal = 500
 rrt = rrttree(50, 50, 1, 0)
 floorplan = cv2.circle(floorplan, (50, 50), 8, (0, 255, 0), -1)
-floorplan = cv2.circle(floorplan, (x_goal, y_goal), 20, (0, 0, 255), -1)
+floorplan = cv2.circle(floorplan, (x_goal, y_goal), 8, (0, 0, 255), -1)
 
 rrtT = {}
 rrtT[rrt.nodeno] = rrt
@@ -72,18 +73,18 @@ def drawline(rrt, parentind , f=0):
         cv2.circle(floorplan , (rrt.x, rrt.y) , 3 , (0, 0 , 255 ) ,-1)
 
 
-def checkobstical(x_new, y_new, floorplan, parentind):
+def checkobstical(x_new, y_new, erosion, parentind):
     x_old = rrtT[parentind].x
     y_old = rrtT[parentind].y
     if x_old  > x_new :
         for i in range(x_new , x_old+1 ):
             y  = np.int(np.round( (y_old - y_new ) * (i - x_new)/(x_old - x_new ) + y_new ))
-            if np.mean(floorplan[y , i]) == 0 :
+            if np.mean(erosion[y , i]) == 0 :
                 return True
     elif x_old  < x_new:
         for i in range(x_old , x_new+1 ):
             y  = np.int(np.round( (y_old - y_new ) * (i - x_new)/(x_old - x_new ) + y_new ))
-            if np.mean(floorplan[y , i]) == 0 :
+            if np.mean(erosion[y , i]) == 0 :
                 return True
     else :
         # print("fine" , parentind)
@@ -113,7 +114,7 @@ while iter < N:
     x_new = np.int(np.round(x_new))
     y_new = np.int(np.round(y_new))
 
-    if checkobstical(x_new, y_new, floorplan, parentind):
+    if checkobstical(x_new, y_new, erosion, parentind):
         continue
 
     rrt = rrttree(x_new, y_new, iter, parentind)

@@ -17,20 +17,21 @@ def makefloor(size , robosize):
         kernel = np.zeros((robosize//2,robosize//2,3))
         v = robosize//2 
     else :
-        kernel = np.zeros((robosize//2 +1 ,1+ robosize//2,3))
+        kernel = np.zeros((robosize//2+1 ,1+ robosize//2,3))
         v = robosize//2 +1
-    kernel = np.uint8(cv2.circle(kernel ,(v//2,v//2) , 2 , (1, 0 , 0 ),thickness=-1 )[:,:,0])
+    kernel = np.uint8(cv2.circle(kernel ,(v//2,v//2) , v//2  , (1, 0 , 0 ),thickness=-1 )[:,:,0])
     
     erosion = cv2.erode(floor,kernel,iterations = 1)
+    plt.imshow(erosion)
+    
+    plt.figure()
+    plt.imshow(floor - erosion , cmap="gray")
+    plt.show()
 
     erosion = cv2.cvtColor(erosion , cv2.COLOR_GRAY2RGB)
     # print(erosion.shape )
-    # plt.imshow(erosion)
     
-    # plt.figure()
-    # plt.imshow(floor)
-    # plt.show()
-    return erosion 
+    return cv2.cvtColor(floor , cv2.COLOR_GRAY2RGB) , erosion 
 
 if __name__ == "__main__":
     makefloor((600,600) , 10)
