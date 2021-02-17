@@ -2,6 +2,8 @@
 import cv2
 from glob import glob
 import re
+
+from matplotlib import pyplot
 numbers = re.compile(r'(\d+)')
 def numericalSort(value):
     parts = numbers.split(value)
@@ -53,7 +55,6 @@ def frames_to_video(input_path, output_path, fps):
     return True
 
 frames_to_video("results/*.png","results/abhinav.mp4", 25)
-
 import sys, os, io
 def rs(): return sys.stdin.readline().rstrip()
 def ri(): return int(sys.stdin.readline())
