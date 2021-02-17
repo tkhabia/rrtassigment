@@ -56,7 +56,6 @@ def goalreached(rrtnode):
     if distance <= threshold:
         rrtgoal = rrttree(x_goal, y_goal, iter+1, iter)
         rrtT[iter+1] = rrtgoal
-        
         return True
     else:
         return False

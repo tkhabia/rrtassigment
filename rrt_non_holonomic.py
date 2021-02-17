@@ -29,7 +29,9 @@ diagofrobot = 30
 maxsteeing = 0.7
 max_v =  30 
 theta_goal = 90*np.pi/180
+
 rrt = rrttree(50, 50, 1, 0 , 0 )
+
 floorplan , erosion = makefloor((x_max , y_max) , diagofrobot)
 floorplan = cv2.circle(floorplan, (50, 50), 8, (0, 255, 0), -1)
 floorplan = cv2.circle(floorplan, (x_goal, y_goal), 8, (0, 0, 255), -1)
@@ -40,16 +42,35 @@ def goalreached(rrtnode):
     the node and the final destination.
     return true or false
     '''
+    distance = np.sqrt((rrtnode.x-x_goal)**2 + (rrtnode.y-y_goal)**2)
+    theta_diff = min(abs(rrtnode.theta - theta_goal), abs(rrtnode.theta - theta_goal - np.pi))
+    if distance <= threshold &&  theta_diff <= orientation_threshold:
+        rrtgoal = rrttree(x_goal, y_goal, iter+1, iter, theta_goal)
+        rrtT[iter+1] = rrtgoal
+        return True
+    else:
+        return False
     pass
 
 def getdistance(rrtT , x_rand  , y_rand ):
     '''
-    get the euclidian distance from the node which is closest to 
+    get the distance along the curve from the node which is closest to 
     the randomly selected node .
-    return distance , parentind 
+    return distance , new_parentind 
 
     '''
-    pass
+    min_dist=(y_max*x_max)+1 + (360)**2
+    index=0
+    for i in range(len(rrtT)):
+        # tempnode=i
+        xt,yt= rrtT[i+1].x, rrtT[i+1].y
+        temp_dist=np.sqrt( (x_rand-xt)**2 + (y_rand-yt)**2 + \
+        			((180/np.pi)**2)*min( (theta_rand - rrtT[i+1].theta)**2, (theta_rand - rrtT[i+1].theta - np.pi)**2, \
+        			(theta_rand - rrtT[i+1].theta + np.pi)**2))
+        if temp_dist<=min_dist:
+            min_dist=temp_dist
+            index=rrtT[i+1].nodeno
+    return min_dist, index
 
 def drawcurve(rrt, parentind , f=0):
     """
