@@ -2,6 +2,8 @@
 import cv2
 from glob import glob
 import re
+
+from matplotlib import pyplot
 numbers = re.compile(r'(\d+)')
 def numericalSort(value):
     parts = numbers.split(value)
@@ -53,3 +55,24 @@ def frames_to_video(input_path, output_path, fps):
     return True
 
 frames_to_video("results/*.png","results/abhinav.mp4", 25)
+import sys, os, io
+def rs(): return sys.stdin.readline().rstrip()
+def ri(): return int(sys.stdin.readline())
+def ria(): return list(map(int, sys.stdin.readline().split()))
+def ws(s): sys.stdout.write(s + '\n')
+def wi(n): sys.stdout.write(str(n) + '\n')
+def wia(a): sys.stdout.write(' '.join([str(x) for x in a]) + '\n')
+import math,datetime,functools,itertools,operator,bisect,fractions,statistics
+from collections import deque,defaultdict,OrderedDict,Counter
+from fractions import Fraction
+from decimal import Decimal
+from sys import stdout
+from heapq import heappush, heappop, heapify ,_heapify_max,_heappop_max,nsmallest,nlargest
+# mod=1000000007
+if(os.path.exists('input.txt')):
+    sys.stdin = open("input.txt","r")
+    sys.stdout = open("output.txt","w")
+###CODE
+tc = ri()
+for _ in range(tc):
+    

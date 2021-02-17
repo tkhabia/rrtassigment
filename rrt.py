@@ -2,7 +2,6 @@
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
-from numpy.lib.polynomial import RankWarning
 from makepath import makefloor
 from combine import frames_to_video
 import os 
@@ -126,7 +125,7 @@ while iter < N:
     iter += 1
     cv2.imwrite('./holonomic/'  + str(iter) + '.png' , floorplan)
 
-while(rrtT[iter].parent != 0 ):
+while(iter < N and rrtT[iter].parent != 0 ):
     drawline(rrtT[iter] , rrtT[iter].parent , 1)
     iter = rrtT[iter].parent
 
