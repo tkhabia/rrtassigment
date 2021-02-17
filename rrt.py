@@ -6,7 +6,10 @@ from numpy.lib.polynomial import RankWarning
 from makepath import makefloor
 from combine import frames_to_video
 import os 
-os.system("rm holonomic/*.png")
+for file in os.listdir("./holonomic/"):
+    if file.endswith(".png"):
+        os.system("rm ./holonomic/*.png")
+        break
 floorplan , erosion = makefloor((600 , 600) , 30)
 
 class rrttree:
