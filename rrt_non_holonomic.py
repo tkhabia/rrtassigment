@@ -8,8 +8,8 @@ from makepath import makefloor
 from combine import frames_to_video
 
 sys.stdout = open("output.txt", "w")
-os.system("rm non_holonomic/*.png")
-
+os.system("rm non_holonomic/*")
+os.system("rm non_holonomic_wheel/*")
 
 class rrttreenon:
     def __init__(self, x, y, nodeno, parent, theta, parent_s, p_v):
@@ -56,16 +56,16 @@ class RRect:
                  (self.verts[0][0], self.verts[0][1]), (0, 255, 0), 2)
 
 
-N = 600
-step_size = 16
+N = 900
+step_size = 18
 threshold = 20
 x_max = 600
 y_max = 600
-bias = 0.09
+bias = 0.11
 x_goal = 400
 y_goal = 500
 orientation_threshold = 10*np.pi/180
-dt = 0.1
+dt = 0.08
 lrobot = 20
 wrobot = 10
 diagofrobot = np.int(np.ceil(np.sqrt(lrobot**2 + wrobot**2)))
@@ -76,8 +76,13 @@ theta_goal = 90*np.pi/180
 rrt = rrttreenon(50, 50, 1, 0, 0, 90*np.pi/180, 0)
 
 floorplan, erosion = makefloor((x_max, y_max), diagofrobot)
+wheelplan = np.copy(floorplan)
+
 floorplan = cv2.circle(floorplan, (50, 50), 8, (0, 255, 0), -1)
-floorplan = cv2.circle(floorplan, (x_goal, y_goal), 8, (0, 0, 255), -1)
+floorplan = cv2.circle(floorplan, (x_goal, y_goal), 20, (0, 0, 255), -1)
+
+wheelplan = cv2.circle(wheelplan, (50, 50), 8, (0, 255, 0), -1)
+wheelplan = cv2.circle(wheelplan, (x_goal, y_goal), 20, (0, 0, 255), -1)
 rrtT = {}
 rrtT[rrt.nodeno] = rrt
 
@@ -91,8 +96,8 @@ def goalreached(rrtnode):
     distance = np.sqrt((rrtnode.x-x_goal)**2 + (rrtnode.y-y_goal)**2)
     theta_diff = min(abs(rrtnode.theta - theta_goal),
                      abs(rrtnode.theta - theta_goal - np.pi))
-    # if distance <= threshold and theta_diff <= orientation_threshold:
-    if distance <= threshold:
+    if distance <= threshold and theta_diff <= orientation_threshold:
+    # if distance <= threshold:
         rrtgoal = rrttreenon(x_goal, y_goal, iter+1, iter,
                              theta_goal, maxsteeing, max_v)
         rrtT[iter+1] = rrtgoal
@@ -116,6 +121,7 @@ def getdistance(rrtT, x_rand, y_rand, theta_rand):
         temp_dist = np.sqrt((x_rand-xt)**2 + (y_rand-yt)**2 +
                             ((180/np.pi)**2)*min((theta_rand - rrtT[i+1].theta)**2, (theta_rand - rrtT[i+1].theta - np.pi)**2,
                                                  (theta_rand - rrtT[i+1].theta + np.pi)**2))
+        # temp_dist = np.sqrt((x_rand-xt)**2 + (y_rand-yt)**2)
         if temp_dist <= min_dist:
             min_dist = temp_dist
             index = rrtT[i+1].nodeno
@@ -128,22 +134,29 @@ def drawcurve(path, lin_v, steering_angle, f=0):
     function to draw the curve 
 
     """
-    is_valid = 0 
+    
     if f == 0:
+        
         for i in range(step_size):
             cv2.line(floorplan, (np.int(np.round(path[0])), np.int(np.round(path[1]))),
-                     (np.int(np.round(path[0] + lin_v * np.cos(path[2])*dt)), np.int(np.round(path[1] + lin_v * np.sin(path[2])*dt))), (125, 125, 0), 1)
+                     (np.int(np.round(path[0] + lin_v * np.cos(path[2])*dt)), np.int(np.round(path[1] + lin_v * np.sin(path[2])*dt))), (0, 255,125), 1)
+            
             path[0] += lin_v * np.cos(path[2])*dt
             path[1] += lin_v * np.sin(path[2])*dt
             path[2] += (lin_v / lrobot) * np.tan(steering_angle) * dt
             if np.mean(erosion[np.int(np.ceil(path[1])), np.int(np.ceil(path[0]))]) == 0 or np.mean(erosion[np.int(np.floor(path[1])), np.int(np.floor(path[0]))]) == 0:
                 return -1
         cv2.circle(floorplan,  (np.int(np.round(path[0])), np.int(
-            np.round(path[1]))), 3, (125, 125, 0), -1)
+            np.round(path[1]))), 3, ( 0 , 255,125), -1)
     else:
         for i in range(step_size):
             cv2.line(floorplan, (np.int(np.round(path[0])), np.int(np.round(path[1]))),
                      (np.int(np.round(path[0] + lin_v * np.cos(path[2])*dt)), np.int(np.round(path[1] + lin_v * np.sin(path[2])*dt))), (255, 0,0), 1)
+            cv2.line(wheelplan, (np.int(np.round(path[0]+ 5*np.cos(path[2] + np.pi/2))), np.int(np.round(path[1] +5* np.sin(path[2] + np.pi/2)))),
+                     (np.int(np.round(path[0] + 5*np.cos(path[2] + np.pi/2) + lin_v * np.cos(path[2])*dt)), np.int(np.round(path[1] + 5*np.sin(path[2] + np.pi/2)+ lin_v * np.sin(path[2])*dt))), (255, 0,0), 1)
+            cv2.line(wheelplan, (np.int(np.round(path[0]+5* np.cos(path[2] - 5*np.pi/2))), np.int(np.round(path[1] + 5*np.sin(path[2] - np.pi/2) ))),
+                     (np.int(np.round(path[0]+5* np.cos(path[2] - np.pi/2) + lin_v * np.cos(path[2])*dt)), np.int(np.round(path[1]+ 5*np.sin(path[2] - np.pi/2) + lin_v * np.sin(path[2])*dt))), (255, 0,0), 1)
+            
             path[0] += lin_v * np.cos(path[2])*dt
             path[1] += lin_v * np.sin(path[2])*dt
             path[2] += (lin_v / lrobot) * np.tan(steering_angle) * dt
@@ -239,15 +252,20 @@ while iter < N:
         break
     iter += 1
     cv2.imwrite('./non_holonomic/' + str(iter) + '.png', floorplan)
-print(iter)
+    # cv2.imwrite('./non_holonomic_wheel/' + str(iter) + '.png', wheelplan)
 while(iter < N and rrtT[iter].parent != 0):
-    print("fu")
     parentind = rrtT[iter].parent
     path = [rrtT[parentind].x, rrtT[parentind].y, rrtT[parentind].theta]
     drawcurve(path, rrtT[iter].p_v, rrtT[iter].parent_s, f=1)
     iter = rrtT[iter].parent
 
 plt.imshow(floorplan)
+plt.figure()
+plt.imshow(wheelplan)
 plt.show()
+
 cv2.imwrite('./non_holonomic/'  + str(N+3) + '.png' , floorplan)
-frames_to_video('./non_holonomic/*.png' , './non_holonomic/holonomic.mp4' , 25)
+cv2.imwrite('./non_holonomic_wheel/' + str(iter) + '.png', wheelplan)
+
+frames_to_video('./non_holonomic/*.png' , './non_holonomic/non_holonomic.mp4' , 20)
+# frames_to_video('./non_holonomic_wheel/*.png' , './non_holonomic_wheel/non_holonomicwheel.mp4' , 20)
