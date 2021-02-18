@@ -89,7 +89,7 @@ def goalreached(rrtnode):
     theta_diff = min(abs(rrtnode.theta - theta_goal),
                      abs(rrtnode.theta - theta_goal - np.pi))
     if distance <= threshold and theta_diff <= orientation_threshold:
-        rrtgoal = rrttreenon(x_goal, y_goal, iter+1, iter, theta_goal)
+        rrtgoal = rrttreenon(x_goal, y_goal, iter+1, iter, theta_goal , maxsteeing , max_v)
         rrtT[iter+1] = rrtgoal
         return True
     else:
@@ -114,7 +114,7 @@ def getdistance(rrtT, x_rand, y_rand ,theta_rand):
         if temp_dist <= min_dist:
             min_dist = temp_dist
             index = rrtT[i+1].nodeno
-    print(index)
+    # print(index)
     return min_dist, index
 
 def drawcurve(path , lin_v , steering_angle, f=0):
@@ -129,6 +129,9 @@ def drawcurve(path , lin_v , steering_angle, f=0):
             path[0]  += lin_v* np.cos(path[2])*dt
             path[1]  += lin_v* np.sin(path[2])*dt
             path[2] += (lin_v /lrobot) * np.tan(steering_angle)* dt 
+            
+
+        print("plotted path " , path )
         cv2.circle(floorplan,  (np.int(np.round(path[0])) , np.int(np.round(path[1]))) , 3 , (125 , 125 , 0 ) , -1)
     else :
         for i in range(step_size ):
@@ -137,10 +140,11 @@ def drawcurve(path , lin_v , steering_angle, f=0):
             path[0]  += lin_v* np.cos(path[2])*dt
             path[1]  += lin_v* np.sin(path[2])*dt
             path[2] += (lin_v /lrobot) * np.tan(steering_angle)* dt 
+            
+
         cv2.circle(floorplan, (np.int(np.round(path[0])) , np.int(np.round(path[1]))) , 3 , (125 , 125 , 0 ) , -1)
 
 def getnewnode(rrtT  , parentind , x_rand , y_rand  , theta_rand  ):
-    print(x_rand , y_rand  , theta_rand)
     path = [rrtT[parentind].x , rrtT[parentind].y , rrtT[parentind].theta ]
     steering_angle = -maxsteeing
     lin_v = -max_v
@@ -148,44 +152,38 @@ def getnewnode(rrtT  , parentind , x_rand , y_rand  , theta_rand  ):
     final_path = [] 
     is_valid = 0 
     while lin_v <= max_v:
-        path = [rrtT[parentind].x , rrtT[parentind].y , rrtT[parentind].theta ]
+        
         steering_angle = -maxsteeing
-
         while steering_angle <= maxsteeing:
-            
-            for i in range(step_size ):
+            path = [rrtT[parentind].x , rrtT[parentind].y , rrtT[parentind].theta]
+            for _ in range(step_size ):
                 is_valid = 0 
                 path[0]  += lin_v* np.cos(path[2])*dt
                 path[1]  += lin_v* np.sin(path[2])*dt
                 path[2] += (lin_v /lrobot) * np.tan(steering_angle)* dt 
-                if np.int(np.round(path[0])) <0 or np.int(np.round(path[0])) >= y_max:
+                if np.int(np.floor(path[0])) <0 or np.int(np.ceil(path[0])) >= y_max:
                     is_valid =1 ;break 
 
-                if np.int(np.round(path[1])) <0 or np.int(np.round(path[1])) >= x_max  :
+                if np.int(np.floor(path[1])) <0 or np.int(np.ceil(path[1])) >= x_max  :
                     is_valid  = 1 
                     break 
-                if np.mean(erosion[np.int(np.round(path[1])) , np.int(np.round(path[0]))]) == 0:
+                if np.mean(erosion[np.int(np.ceil(path[1])) , np.int(np.ceil(path[0]))]) == 0 or np.mean(erosion[np.int(np.floor(path[1])) , np.int(np.floor(path[0]))]) == 0:
                     is_valid = 1 
                     break 
             
             steering_angle += 0.05
             
-
             if is_valid ==1 :
                 continue 
             
-
             temp_dist = np.sqrt((x_rand- path[0])**2 + (y_rand-path[1])**2 +
                             ((180/np.pi)**2)*min((theta_rand - path[2])**2, (theta_rand - path[2] - np.pi)**2,
                                                     (theta_rand - path[2] + np.pi)**2))
-            if lin_v == max_v:
-                print(steering_angle , temp_dist)
 
             if distance_new > temp_dist :
                 distance_new = temp_dist 
-                final_path = [lin_v , steering_angle , path ]
+                final_path = [lin_v , steering_angle -0.5 , path ]
             
-        
         if (lin_v + 5) > -30 and  (lin_v + 5) < 30 : 
             lin_v = 30
         else:
@@ -193,11 +191,11 @@ def getnewnode(rrtT  , parentind , x_rand , y_rand  , theta_rand  ):
 
 
     path = [rrtT[parentind].x , rrtT[parentind].y , rrtT[parentind].theta ]
-    print("path -", path)
-    if len(final_path ) == 0:
+    print("path start -", path)
+    if len(final_path ) < 1:
         return None  
-    print(final_path)
-    drawcurve(path , final_path[0]  , final_path[1])
+    print("path reached " , final_path[2])
+    drawcurve(path , final_path[0], final_path[1])
     return final_path 
 
 
@@ -236,7 +234,7 @@ while(iter < N and rrtT[iter].parent != 0):
     path = [rrtT[parentind].x , rrtT[parentind].y , rrtT[parentind].theta ]
     drawcurve(path,rrtT[iter].p_v , rrtT[iter].parent_s , 1)
     iter = rrtT[iter].parent
-print(len(rrtT))
+
 plt.imshow(floorplan)
 plt.show()
 # cv2.imwrite('./non_holonomic/'  + str(N+3) + '.png' , floorplan)
